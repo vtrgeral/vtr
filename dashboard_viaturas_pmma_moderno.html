@@ -1,0 +1,286 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+.wrap{padding:0 0 2rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.25rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:#185FA5}
+.topbar-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.topbar-sub{font-size:12px;color:var(--color-text-secondary)}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.filters{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:1rem 1.25rem;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.f-group{display:flex;flex-direction:column;gap:5px}
+.f-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em}
+select{font-size:13px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);min-width:140px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:1.1rem 1.25rem}
+.kpi{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem 1.1rem;display:flex;flex-direction:column;gap:6px}
+.kpi-icon{font-size:18px;width:34px;height:34px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center}
+.kpi-val{font-size:26px;font-weight:500;line-height:1}
+.kpi-lbl{font-size:12px;color:var(--color-text-secondary)}
+.kpi-sub{font-size:11px;font-weight:500}
+.kpi-blue .kpi-icon{background:#E6F1FB;color:#185FA5}
+.kpi-blue .kpi-val{color:#0C447C}
+.kpi-blue .kpi-sub{color:#185FA5}
+.kpi-green .kpi-icon{background:#EAF3DE;color:#3B6D11}
+.kpi-green .kpi-val{color:#27500A}
+.kpi-green .kpi-sub{color:#3B6D11}
+.kpi-amber .kpi-icon{background:#FAEEDA;color:#854F0B}
+.kpi-amber .kpi-val{color:#633806}
+.kpi-amber .kpi-sub{color:#854F0B}
+.kpi-red .kpi-icon{background:#FCEBEB;color:#A32D2D}
+.kpi-red .kpi-val{color:#791F1F}
+.kpi-red .kpi-sub{color:#A32D2D}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 1.25rem 1rem}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.1rem}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.8rem}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--color-text-secondary);margin-bottom:10px}
+.leg-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:-1px}
+.gc-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:0 1.25rem 1rem}
+.gc-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.9rem 1rem}
+.gc-name{font-size:13px;font-weight:500;margin-bottom:.5rem}
+.gc-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-secondary);margin-bottom:3px}
+.gc-stat span:last-child{font-weight:500;color:var(--color-text-primary)}
+.bar-bg{height:5px;background:var(--color-background-secondary);border-radius:3px;margin-top:8px;overflow:hidden}
+.bar-fg{height:100%;border-radius:3px}
+.tbl-wrap{padding:0 1.25rem 1rem;overflow-x:auto}
+.tbl-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.7rem;padding-top:.2rem;border-top:0.5px solid var(--color-border-tertiary);padding-top:1rem}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+th{text-align:left;font-weight:500;color:var(--color-text-secondary);padding:7px 10px;border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+td{padding:7px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:hover td{background:var(--color-background-secondary)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bg-blue{background:#E6F1FB;color:#0C447C}
+.bg-green{background:#EAF3DE;color:#27500A}
+.bg-amber{background:#FAEEDA;color:#633806}
+.bg-red{background:#FCEBEB;color:#791F1F}
+.bg-purple{background:#EEEDFE;color:#3C3489}
+.bg-teal{background:#E1F5EE;color:#085041}
+.mini-bar{display:flex;align-items:center;gap:6px}
+.mini-bg{flex:1;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;min-width:40px}
+.mini-fg{height:100%;border-radius:3px}
+</style>
+
+<h2 class="sr-only">Dashboard moderno de gestão de viaturas PMMA por Grande Comando e UPM</h2>
+
+<div class="wrap">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="topbar-title"><i class="ti ti-shield-chevron" aria-hidden="true" style="font-size:15px;margin-right:5px"></i>PMMA — Gestão de Viaturas</div>
+      <div class="topbar-sub">Painel de acompanhamento operacional · 11/05/2026</div>
+    </div>
+  </div>
+  <span class="pill"><i class="ti ti-circle-dot" aria-hidden="true" style="font-size:11px;margin-right:3px;color:#3B6D11"></i>Dados atualizados</span>
+</div>
+
+<div class="filters">
+  <div class="f-group">
+    <span class="f-label">Grande Comando</span>
+    <select id="selGC">
+      <option value="">Todos os grandes comandos</option>
+      <option>CPM</option><option>CPI</option><option>CPE</option><option>CME</option><option>CSC</option>
+    </select>
+  </div>
+  <div class="f-group">
+    <span class="f-label">Unidade (UPM)</span>
+    <select id="selUPM"><option value="">Todas as unidades</option></select>
+  </div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="charts-row">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-donut" aria-hidden="true" style="margin-right:5px"></i>Situação da frota</div>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:#185FA5"></span>Prontas</span>
+      <span><span class="leg-dot" style="background:#BA7517"></span>Baixadas</span>
+      <span><span class="leg-dot" style="background:#A32D2D"></span>Inservíveis</span>
+    </div>
+    <div style="position:relative;height:200px"><canvas id="cDonut" role="img" aria-label="Gráfico de rosca com situação das viaturas: prontas, baixadas e inservíveis">Distribuição de viaturas por situação operacional.</canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-bar" aria-hidden="true" style="margin-right:5px"></i>Viaturas por Grande Comando</div>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:#185FA5"></span>Prontas</span>
+      <span><span class="leg-dot" style="background:#BA7517"></span>Baixadas</span>
+      <span><span class="leg-dot" style="background:#A32D2D"></span>Inservíveis</span>
+    </div>
+    <div style="position:relative;height:200px"><canvas id="cBar" role="img" aria-label="Gráfico de barras empilhadas com viaturas por Grande Comando">Viaturas prontas, baixadas e inservíveis por Grande Comando.</canvas></div>
+  </div>
+</div>
+
+<div class="gc-row" id="gcRow"></div>
+
+<div class="tbl-wrap">
+  <div class="tbl-title"><i class="ti ti-list-details" aria-hidden="true" style="margin-right:5px"></i>Detalhamento por UPM</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:80px">GC</th>
+        <th style="width:110px">UPM</th>
+        <th style="width:60px;text-align:center">Total</th>
+        <th style="width:60px;text-align:center">Prontas</th>
+        <th style="width:70px;text-align:center">Baixadas</th>
+        <th style="width:80px;text-align:center">Inservíveis</th>
+        <th style="width:130px">Disponibilidade</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const GC_MAP={CPM:['1º BPM','6º BPM','8º BPM','9º BPM','13º BPM','20º BPM','21º BPM','22º BPM','38º BPM','40º BPM','42º BPM','43º BPM','CPGD IND'],CPI:['2º BPM','3º BPM','4º BPM','5º BPM','7º BPM','10º BPM','11º BPM','12º BPM','14º BPM','15º BPM','16º BPM','17º BPM','18º BPM','19º BPM','23º BPM','24º BPM','25º BPM','26º BPM','27º BPM','28º BPM','29º BPM','30º BPM','31º BPM','32º BPM','33º BPM','34º BPM','35º BPM','36º BPM','37º BPM','39º BPM','41º BPM','44º BPM','45º BPM','46º BPM','47º BPM'],CPE:['BPA','BPRV','1º BPTUR','2º BPTUR','1º BMT','2º BMT','3º BMT','1º CIMT'],CME:['BPCHOQUE','1º RPMONT','2º RPMONT','BATALHÃO DE CÃES','ROTAM','BOPE','COSAR'],CSC:['CSC']};
+const GC_BADGE={CPM:'bg-blue',CPI:'bg-purple',CPE:'bg-teal',CME:'bg-amber',CSC:'bg-green'};
+const RAW=[
+  {gc:'CME',upm:'1º RPMONT',tot:3,pron:3,bai:0,ins:0},{gc:'CME',upm:'BOPE',tot:13,pron:12,bai:1,ins:0},
+  {gc:'CPI',upm:'17º BPM',tot:10,pron:6,bai:2,ins:2},{gc:'CPI',upm:'47º BPM',tot:5,pron:3,bai:2,ins:0},
+  {gc:'CPI',upm:'19º BPM',tot:13,pron:12,bai:1,ins:0},{gc:'CPI',upm:'44º BPM',tot:6,pron:5,bai:0,ins:1},
+  {gc:'CPE',upm:'BPRV',tot:14,pron:11,bai:3,ins:0},{gc:'CPI',upm:'29º BPM',tot:11,pron:10,bai:1,ins:1},
+  {gc:'CME',upm:'ROTAM',tot:7,pron:6,bai:1,ins:0},{gc:'CPE',upm:'1º BMT',tot:7,pron:6,bai:1,ins:0},
+  {gc:'CPE',upm:'2º BPTUR',tot:18,pron:12,bai:4,ins:2},{gc:'CPI',upm:'30º BPM',tot:10,pron:5,bai:2,ins:3},
+  {gc:'CPI',upm:'4º BPM',tot:20,pron:13,bai:5,ins:2},{gc:'CPI',upm:'35º BPM',tot:12,pron:5,bai:1,ins:1},
+  {gc:'CME',upm:'2º RPMONT',tot:4,pron:2,bai:1,ins:1},{gc:'CME',upm:'BPCHOQUE',tot:9,pron:7,bai:2,ins:0},
+  {gc:'CPE',upm:'2º BMT',tot:3,pron:2,bai:1,ins:0},{gc:'CPI',upm:'34º BPM',tot:10,pron:5,bai:0,ins:5},
+  {gc:'CPI',upm:'11º BPM',tot:21,pron:11,bai:9,ins:4},{gc:'CPI',upm:'39º BPM',tot:22,pron:11,bai:6,ins:5},
+  {gc:'CPI',upm:'23º BPM',tot:11,pron:7,bai:2,ins:2},{gc:'CPI',upm:'7º BPM',tot:16,pron:15,bai:1,ins:0},
+  {gc:'CPI',upm:'3º BPM',tot:14,pron:7,bai:7,ins:0},{gc:'CPI',upm:'14º BPM',tot:16,pron:12,bai:3,ins:1},
+  {gc:'CPE',upm:'1º CIMT',tot:1,pron:1,bai:0,ins:1},{gc:'CSC',upm:'CSC',tot:7,pron:6,bai:1,ins:0},
+  {gc:'CPI',upm:'5º BPM',tot:16,pron:9,bai:5,ins:2},{gc:'CPI',upm:'31º BPM',tot:16,pron:10,bai:3,ins:3},
+  {gc:'CPE',upm:'BPA',tot:10,pron:4,bai:2,ins:4},{gc:'CPI',upm:'12º BPM',tot:8,pron:11,bai:3,ins:8},
+  {gc:'CPI',upm:'2º BPM',tot:16,pron:8,bai:3,ins:5},{gc:'CPI',upm:'33º BPM',tot:19,pron:8,bai:4,ins:7},
+  {gc:'CPI',upm:'16º BPM',tot:23,pron:14,bai:5,ins:4},{gc:'CPI',upm:'28º BPM',tot:22,pron:7,bai:3,ins:11},
+  {gc:'CPE',upm:'1º BPTUR',tot:15,pron:12,bai:3,ins:0},{gc:'CPI',upm:'37º BPM',tot:12,pron:7,bai:2,ins:4},
+  {gc:'CPI',upm:'18º BPM',tot:32,pron:20,bai:2,ins:10},{gc:'CPI',upm:'46º BPM',tot:12,pron:9,bai:3,ins:0},
+  {gc:'CPI',upm:'36º BPM',tot:22,pron:7,bai:4,ins:4},{gc:'CPI',upm:'45º BPM',tot:9,pron:6,bai:1,ins:2},
+  {gc:'CPI',upm:'32º BPM',tot:9,pron:5,bai:2,ins:2},{gc:'CPI',upm:'27º BPM',tot:22,pron:7,bai:7,ins:8},
+  {gc:'CPI',upm:'10º BPM',tot:28,pron:12,bai:5,ins:11},{gc:'CPI',upm:'25º BPM',tot:12,pron:4,bai:2,ins:6},
+  {gc:'CPI',upm:'41º BPM',tot:11,pron:7,bai:5,ins:3},{gc:'CPI',upm:'15º BPM',tot:20,pron:12,bai:4,ins:4},
+  {gc:'CPI',upm:'26º BPM',tot:22,pron:6,bai:4,ins:12},{gc:'CPM',upm:'42º BPM',tot:7,pron:3,bai:4,ins:0},
+  {gc:'CPM',upm:'6º BPM',tot:8,pron:5,bai:3,ins:0},{gc:'CPM',upm:'22º BPM',tot:7,pron:3,bai:4,ins:0},
+  {gc:'CPM',upm:'38º BPM',tot:6,pron:5,bai:1,ins:0},{gc:'CPM',upm:'40º BPM',tot:11,pron:7,bai:4,ins:0},
+  {gc:'CPM',upm:'43º BPM',tot:11,pron:3,bai:8,ins:0},{gc:'CPM',upm:'21º BPM',tot:9,pron:4,bai:3,ins:2},
+  {gc:'CPM',upm:'13º BPM',tot:9,pron:5,bai:4,ins:0},{gc:'CPM',upm:'1º BPM',tot:12,pron:4,bai:5,ins:1},
+  {gc:'CPM',upm:'9º BPM',tot:8,pron:4,bai:4,ins:0},{gc:'CPM',upm:'20º BPM',tot:13,pron:5,bai:8,ins:0},
+  {gc:'CPM',upm:'8º BPM',tot:13,pron:8,bai:5,ins:4},{gc:'CPI',upm:'24º BPM',tot:11,pron:4,bai:2,ins:4},
+];
+
+let dChart=null,bChart=null;
+
+function getFiltered(){
+  const gc=document.getElementById('selGC').value;
+  const upm=document.getElementById('selUPM').value;
+  return RAW.filter(r=>(gc?r.gc===gc:true)&&(upm?r.upm===upm:true));
+}
+
+function sum(arr,k){return arr.reduce((s,r)=>s+r[k],0);}
+
+function pctColor(p){return p>=70?'#185FA5':p>=40?'#BA7517':'#A32D2D';}
+
+function render(){
+  const data=getFiltered();
+  const tot=sum(data,'tot'),pron=sum(data,'pron'),bai=sum(data,'bai'),ins=sum(data,'ins');
+  const pct=tot>0?Math.round(pron/tot*100):0;
+
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi kpi-blue">
+      <div class="kpi-icon"><i class="ti ti-car" aria-hidden="true"></i></div>
+      <div class="kpi-val">${tot}</div>
+      <div class="kpi-lbl">Total de viaturas</div>
+      <div class="kpi-sub">${data.length} UPMs informantes</div>
+    </div>
+    <div class="kpi kpi-green">
+      <div class="kpi-icon"><i class="ti ti-circle-check" aria-hidden="true"></i></div>
+      <div class="kpi-val">${pron}</div>
+      <div class="kpi-lbl">Prontas para operação</div>
+      <div class="kpi-sub">${pct}% de disponibilidade</div>
+    </div>
+    <div class="kpi kpi-amber">
+      <div class="kpi-icon"><i class="ti ti-tool" aria-hidden="true"></i></div>
+      <div class="kpi-val">${bai}</div>
+      <div class="kpi-lbl">Baixadas p/ manutenção</div>
+      <div class="kpi-sub">${tot>0?Math.round(bai/tot*100):0}% da frota</div>
+    </div>
+    <div class="kpi kpi-red">
+      <div class="kpi-icon"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+      <div class="kpi-val">${ins}</div>
+      <div class="kpi-lbl">Inservíveis</div>
+      <div class="kpi-sub">${tot>0?Math.round(ins/tot*100):0}% da frota</div>
+    </div>
+  `;
+
+  if(dChart)dChart.destroy();
+  dChart=new Chart(document.getElementById('cDonut'),{
+    type:'doughnut',
+    data:{labels:['Prontas','Baixadas','Inservíveis'],datasets:[{data:[pron,bai,ins],backgroundColor:['#185FA5','#BA7517','#A32D2D'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed} (${tot>0?Math.round(c.parsed/tot*100):0}%)`}}}}
+  });
+
+  const gcKeys=Object.keys(GC_MAP);
+  const gcData=gcKeys.map(g=>{
+    const rows=RAW.filter(r=>r.gc===g);
+    return{g,pron:sum(rows,'pron'),bai:sum(rows,'bai'),ins:sum(rows,'ins')};
+  });
+  if(bChart)bChart.destroy();
+  bChart=new Chart(document.getElementById('cBar'),{
+    type:'bar',
+    data:{labels:gcKeys,datasets:[
+      {label:'Prontas',data:gcData.map(d=>d.pron),backgroundColor:'#185FA5',borderRadius:2},
+      {label:'Baixadas',data:gcData.map(d=>d.bai),backgroundColor:'#BA7517',borderRadius:2},
+      {label:'Inservíveis',data:gcData.map(d=>d.ins),backgroundColor:'#A32D2D',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,ticks:{font:{size:10}}}}}
+  });
+
+  const gcRow=document.getElementById('gcRow');
+  gcRow.innerHTML=gcKeys.map(g=>{
+    const rows=RAW.filter(r=>r.gc===g);
+    const t=sum(rows,'tot'),p=sum(rows,'pron'),b=sum(rows,'bai'),i=sum(rows,'ins');
+    const pct=t>0?Math.round(p/t*100):0;
+    const col=pctColor(pct);
+    return`<div class="gc-card">
+      <div class="gc-name"><span class="badge ${GC_BADGE[g]}">${g}</span></div>
+      <div class="gc-stat"><span>Total</span><span>${t}</span></div>
+      <div class="gc-stat"><span>Prontas</span><span style="color:#185FA5">${p}</span></div>
+      <div class="gc-stat"><span>Baixadas</span><span style="color:#BA7517">${b}</span></div>
+      <div class="gc-stat"><span>Inservíveis</span><span style="color:#A32D2D">${i}</span></div>
+      <div class="bar-bg"><div class="bar-fg" style="width:${pct}%;background:${col}"></div></div>
+      <div style="font-size:11px;color:${col};margin-top:4px;font-weight:500">${pct}% operacional</div>
+    </div>`;
+  }).join('');
+
+  const sorted=[...data].sort((a,b)=>b.tot-a.tot);
+  document.getElementById('tbody').innerHTML=sorted.length?sorted.map(r=>{
+    const p=r.tot>0?Math.round(r.pron/r.tot*100):0;
+    const col=pctColor(p);
+    return`<tr>
+      <td><span class="badge ${GC_BADGE[r.gc]||'bg-blue'}">${r.gc}</span></td>
+      <td style="font-weight:500">${r.upm}</td>
+      <td style="text-align:center">${r.tot}</td>
+      <td style="text-align:center;color:#185FA5;font-weight:500">${r.pron}</td>
+      <td style="text-align:center;color:#BA7517">${r.bai}</td>
+      <td style="text-align:center;color:#A32D2D">${r.ins}</td>
+      <td><div class="mini-bar"><div class="mini-bg"><div class="mini-fg" style="width:${p}%;background:${col}"></div></div><span style="font-size:11px;font-weight:500;color:${col};min-width:32px">${p}%</span></div></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--color-text-secondary);padding:1.5rem">Nenhum dado encontrado.</td></tr>';
+}
+
+function updateUPMs(){
+  const gc=document.getElementById('selGC').value;
+  const upms=gc?Object.keys(GC_MAP).includes(gc)?GC_MAP[gc].filter(u=>RAW.some(r=>r.upm===u)):[]:[...new Set(RAW.map(r=>r.upm))].sort();
+  const sel=document.getElementById('selUPM');
+  sel.innerHTML='<option value="">Todas as unidades</option>'+upms.map(u=>`<option>${u}</option>`).join('');
+}
+
+document.getElementById('selGC').addEventListener('change',()=>{updateUPMs();render();});
+document.getElementById('selUPM').addEventListener('change',render);
+updateUPMs();
+render();
+</script>
