@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMMA — Gestão de Viaturas</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2230;--bg4:#21283a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --blue:#388bfd;--blue-dim:rgba(56,139,253,0.12);--blue-glow:rgba(56,139,253,0.25);
+  --green:#3fb950;--green-dim:rgba(63,185,80,0.12);
+  --amber:#d29922;--amber-dim:rgba(210,153,34,0.12);
+  --red:#f85149;--red-dim:rgba(248,81,73,0.12);
+  --purple:#bc8cff;--teal:#39d3bb;
+  --r:10px;--rs:6px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;line-height:1.5}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;gap:12px;flex-wrap:wrap}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.shield{width:30px;height:30px;background:var(--blue-dim);border:1px solid var(--blue-glow);border-radius:var(--rs);display:flex;align-items:center;justify-content:center}
+.shield svg{width:15px;height:15px;fill:var(--blue)}
+.topbar-title{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.topbar-sub{font-size:11px;color:var(--text2)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green);background:var(--green-dim);border:1px solid rgba(63,185,80,0.22);border-radius:20px;padding:3px 11px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.btn{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;padding:5px 13px;border-radius:var(--rs);cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:transparent;color:var(--text2)}
+.btn:hover{color:var(--text);border-color:rgba(255,255,255,0.28)}
+.btn-pdf{color:var(--blue);border-color:var(--blue-glow);background:var(--blue-dim)}
+.btn-pdf:hover{background:rgba(56,139,253,0.2)}
+.btn svg,.btn-pdf svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── FILTERS ── */
+.filters{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.f-group{display:flex;flex-direction:column;gap:4px}
+.f-label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em}
+select{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:6px 10px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--bg3);color:var(--text);min-width:190px;outline:none;cursor:pointer;transition:border-color .15s}
+select:focus,select:hover{border-color:var(--blue)}
+.btn-reset{font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:500;padding:6px 12px;border-radius:var(--rs);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;align-self:flex-end;transition:all .15s}
+.btn-reset:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── LAYOUT ── */
+.main{padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* ── KPIs ── */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi:hover{border-color:var(--border2)}
+.kpi-blue::after{background:var(--blue)} .kpi-green::after{background:var(--green)}
+.kpi-amber::after{background:var(--amber)} .kpi-red::after{background:var(--red)}
+.kpi-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.kpi-lbl{font-size:11px;color:var(--text2);font-weight:500}
+.kpi-ico{width:26px;height:26px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:13px}
+.kpi-blue .kpi-ico{background:var(--blue-dim);color:var(--blue)}
+.kpi-green .kpi-ico{background:var(--green-dim);color:var(--green)}
+.kpi-amber .kpi-ico{background:var(--amber-dim);color:var(--amber)}
+.kpi-red .kpi-ico{background:var(--red-dim);color:var(--red)}
+.kpi-val{font-size:30px;font-weight:600;letter-spacing:-.03em;font-family:'IBM Plex Mono',monospace;line-height:1}
+.kpi-blue .kpi-val{color:var(--blue)} .kpi-green .kpi-val{color:var(--green)}
+.kpi-amber .kpi-val{color:var(--amber)} .kpi-red .kpi-val{color:var(--red)}
+.kpi-sub{font-size:11px;color:var(--text2);margin-top:5px}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:1fr 1.7fr;gap:10px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.card-hd{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.leg-sq{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+
+/* ── GC CARDS ── */
+.gc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.gc-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;transition:border-color .2s,transform .18s;cursor:default}
+.gc-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.gc-bdg{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;margin-bottom:9px}
+.gc-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px}
+.gc-row span:last-child{font-weight:500;font-family:'IBM Plex Mono',monospace}
+.prog-bg{height:4px;background:var(--bg3);border-radius:2px;margin-top:9px;overflow:hidden}
+.prog-fg{height:100%;border-radius:2px}
+.gc-pct{font-size:10px;font-weight:600;margin-top:4px;font-family:'IBM Plex Mono',monospace}
+
+/* ── TABLE CARD ── */
+.tbl-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tbl-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;font-weight:500;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.row-main:hover td{background:rgba(255,255,255,0.025);cursor:pointer}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.mono{font-family:'IBM Plex Mono',monospace}
+.mini-bar{display:flex;align-items:center;gap:7px}
+.mini-bg{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;min-width:45px}
+.mini-fg{height:100%;border-radius:3px}
+.expand-ico{display:inline-block;font-size:9px;color:var(--text3);transition:transform .2s;margin-right:2px}
+.row-main.open .expand-ico{transform:rotate(90deg)}
+
+/* ── DETAIL ROW ── */
+.detail-row td{padding:0}
+.detail-inner{display:none;grid-template-columns:1fr 1fr;gap:12px;padding:14px 14px 14px 38px;background:rgba(22,27,34,0.8);border-bottom:1px solid var(--border)}
+.detail-inner.visible{display:grid}
+.det-section{display:flex;flex-direction:column;gap:6px}
+.det-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.det-box{background:var(--bg3);border-radius:var(--rs);padding:9px 11px;font-size:11px;color:var(--text2);line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:160px;overflow-y:auto}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── PRINT ── */
+@media print{
+  body{background:#fff!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  :root{--bg:#fff;--bg2:#f7f8fa;--bg3:#eef0f3;--bg4:#e8eaed;--border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);--text:#111;--text2:#555;--text3:#888}
+  .topbar{position:relative;background:#fff;border-bottom:1px solid #ddd;height:auto;padding:10px 18px}
+  .btn,.btn-pdf,.btn-reset{display:none!important}
+  .live-badge{border:1px solid #ccc;color:#444}
+  .live-dot{animation:none;background:#555}
+  .filters{background:#f7f8fa;padding:10px 18px}
+  .main{padding:14px 18px;gap:12px}
+  .kpi{border:1px solid #ddd;break-inside:avoid}
+  .kpi::after{display:none}
+  .kpi-val{font-size:22px}
+  .kpi-ico{background:#eee!important;color:#555!important}
+  .charts-row{grid-template-columns:1fr 1fr}
+  .card{border:1px solid #ddd;break-inside:avoid}
+  .gc-grid{grid-template-columns:repeat(5,1fr)}
+  .gc-card{border:1px solid #ddd;break-inside:avoid}
+  .prog-bg{background:#e0e0e0}
+  .tbl-card{border:1px solid #ddd}
+  thead th{background:#eef0f3!important;color:#555!important}
+  .row-main:hover td{background:transparent}
+  .detail-inner{background:#f7f8fa!important;border-bottom:1px solid #ddd}
+  .detail-inner{display:grid!important}
+  .det-box{background:#eef0f3!important;color:#444!important;max-height:none}
+  .expand-ico{display:none}
+  .mini-bg{background:#ddd}
+  .badge{border:1px solid rgba(0,0,0,0.15)}
+  .gc-bdg{border:1px solid rgba(0,0,0,0.12)}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="shield">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+    </div>
+    <div>
+      <div class="topbar-title">PMMA — Gestão de Viaturas</div>
+      <div class="topbar-sub">Painel de acompanhamento operacional</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge"><span class="live-dot"></span>Atualizado em 11/05/2026</div>
+    <button class="btn" onclick="window.print()">
+      <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir
+    </button>
+    <button class="btn btn-pdf" onclick="gerarPDF()">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Salvar PDF
+    </button>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <div class="f-group">
+    <span class="f-label">Grande Comando</span>
+    <select id="selGC">
+      <option value="">Todos os grandes comandos</option>
+      <option>CPM</option><option>CPI</option><option>CPE</option><option>CME</option><option>CSC</option>
+    </select>
+  </div>
+  <div class="f-group">
+    <span class="f-label">Unidade (UPM)</span>
+    <select id="selUPM"><option value="">Todas as unidades</option></select>
+  </div>
+  <button class="btn-reset" onclick="reset()">↺ Limpar</button>
+</div>
+
+<div class="main">
+  <div class="kpis" id="kpis"></div>
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-hd"><span class="dot" style="background:var(--blue)"></span>Situação da frota</div>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:var(--blue)"></span>Prontas</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--amber)"></span>Baixadas</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--red)"></span>Inservíveis</span>
+      </div>
+      <div style="position:relative;height:200px"><canvas id="cDonut"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="dot" style="background:var(--purple)"></span>Viaturas por Grande Comando</div>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:var(--blue)"></span>Prontas</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--amber)"></span>Baixadas</span>
+        <span class="leg"><span class="leg-sq" style="background:var(--red)"></span>Inservíveis</span>
+      </div>
+      <div style="position:relative;height:200px"><canvas id="cBar"></canvas></div>
+    </div>
+  </div>
+  <div class="gc-grid" id="gcGrid"></div>
+  <div class="tbl-card">
+    <div class="tbl-hd">
+      <div class="card-hd" style="margin:0"><span class="dot" style="background:var(--teal)"></span>Detalhamento por UPM <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;margin-left:5px">— clique na linha para ver as viaturas</span></div>
+      <span id="tbl-count" style="font-size:11px;color:var(--text2)"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:24px"></th>
+            <th>GC</th>
+            <th>UPM</th>
+            <th style="text-align:center">Total</th>
+            <th style="text-align:center">Prontas</th>
+            <th style="text-align:center">Baixadas</th>
+            <th style="text-align:center">Inservíveis</th>
+            <th style="min-width:120px">Disponibilidade</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── DADOS ── */
+const GC_MAP={
+  CPM:['1º BPM','6º BPM','8º BPM','9º BPM','13º BPM','20º BPM','21º BPM','22º BPM','38º BPM','40º BPM','42º BPM','43º BPM','CPGD IND'],
+  CPI:['2º BPM','3º BPM','4º BPM','5º BPM','7º BPM','10º BPM','11º BPM','12º BPM','14º BPM','15º BPM','16º BPM','17º BPM','18º BPM','19º BPM','23º BPM','24º BPM','25º BPM','26º BPM','27º BPM','28º BPM','29º BPM','30º BPM','31º BPM','32º BPM','33º BPM','34º BPM','35º BPM','36º BPM','37º BPM','39º BPM','41º BPM','44º BPM','45º BPM','46º BPM','47º BPM'],
+  CPE:['BPA','BPRV','1º BPTUR','2º BPTUR','1º BMT','2º BMT','3º BMT','1º CIMT'],
+  CME:['BPCHOQUE','1º RPMONT','2º RPMONT','BATALHÃO DE CÃES','ROTAM','BOPE','COSAR'],
+  CSC:['CSC']
+};
+const GCC={
+  CPM:{bg:'rgba(56,139,253,0.13)',fg:'#79b8ff'},
+  CPI:{bg:'rgba(188,140,255,0.13)',fg:'#d2a8ff'},
+  CPE:{bg:'rgba(57,211,187,0.13)',fg:'#3dd6c2'},
+  CME:{bg:'rgba(210,153,34,0.13)',fg:'#e3b341'},
+  CSC:{bg:'rgba(63,185,80,0.13)',fg:'#3fb950'}
+};
+
+/* Dados reais das colunas I e J da planilha */
+const RAW=[
+  {gc:'CME',upm:'1º RPMONT',tot:3,pron:3,bai:0,ins:0,
+   loc:'1. HILUX - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2017 - PRONTA\n2. TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CME',upm:'BOPE',tot:13,pron:12,bai:1,ins:0,
+   loc:'1. TOYOTA HILUX - 2025 - PRONTA\n2. MITSUBISHI L200 - 2025 - BAIXADA\n3. TOYOTA HILUX - 2025 - PRONTA',
+   prop:'1. CHEVROLET S10 - 2013 - PRONTA\n2. FORD RANGER - 2018 - PRONTA\n3. CHEVROLET TRAILBLAZER - 2024 - PRONTA\n4. CHEVROLET TRAILBLAZER - 2024 - PRONTA\n5. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n6. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n7. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n8. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n9. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n10. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'17º BPM',tot:10,pron:6,bai:2,ins:2,
+   loc:'1. FORD RANGER - 2025 - PLACA SMU 5B91 - OPERANDO\n2. HILUX - 2025 - PLACA SMV 9G68 - OPERANDO',
+   prop:'1. FORD RANGER - 2021 - PLACA ROI-7F91 - OPERANDO\n2. DUSTER - 2023 - PLACA ROR 7D32 - OPERANDO\n3. DUSTER - 2023 - PLACA ROR 8E88 - OPERANDO\n4. TRAILBLAZER - 2026 - PLACA UJQ 2H24 - OPERANDO\n5. FORD RANGER - 2021 - PLACA ROH 6I22 - BAIXADA TEMPORARIAMENTE\n6. L200 TRITON - 2019 - PLACA PTL 8916 - BAIXADA TEMPORARIAMENTE\n7. L200 TRITON - 2013 - PLACA OIS 5I24 - INSERVÍVEL\n8. PAJERO DAKAR - 2013 - PLACA OIZ 4395 - INSERVÍVEL'},
+  {gc:'CPI',upm:'47º BPM',tot:5,pron:3,bai:2,ins:0,
+   loc:'FORD RANGER - 2025 - BAIXADA\nCHEVROLET S10 - 2023 - PRONTA',
+   prop:'FORD RANGER - 2021 - BAIXADA\nMITSUBISHI TRITON - 2023 - PRONTA\nCHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'19º BPM',tot:13,pron:12,bai:1,ins:0,
+   loc:'1. HILLUX - 2025 - PRONTA\n2. HILLUX - 2025 - PRONTA\n3. L200 TRITON - 2024 - PRONTA\n4. L200 TRITON - 2024 - PRONTA\n5. S10 - 2025 - PRONTA\n6. RANGER - 2025 - PRONTA\n7. TRAILBLAZER - 2026 - PRONTA',
+   prop:'1. RANGER - 2021 - BAIXADA\n2. RANGER - 2021 - PRONTA\n3. YARIS - 2023 - PRONTA\n4. RANGER - 2021 - PRONTA\n5. RANGER - 2018 - PRONTA\n6. L200 TRITON - 2024 - PRONTA'},
+  {gc:'CPI',upm:'44º BPM',tot:6,pron:5,bai:0,ins:1,
+   loc:'Nenhuma viatura locada.',
+   prop:'1. FORD RANGER - 2021 - PRONTA\n2. L200 TRITON - 2024 - PRONTA\n3. L200 TRITON - 2024 - PRONTA\n4. L200 TRITON - 2019 - PRONTA\n5. FORD RANGER - 2017 - INSERVÍVEL\n6. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPE',upm:'BPRV',tot:14,pron:11,bai:3,ins:0,
+   loc:'1. L200 MITSUBISHI 2024 – 24-011 (PRONTA)\n2. L200 MITSUBISHI 2024 – 24-012 (PRONTA)\n3. L200 MITSUBISHI 2024 – 24-013 (PRONTA)\n4. L200 MITSUBISHI 2024 – 24-014 (PRONTA)\n5. L200 MITSUBISHI 2024 – 24-015 (PRONTA)\n6. L200 MITSUBISHI 2024 – 24-016 (PRONTA)\n7. L200 MITSUBISHI 2024 – 24-017 (PRONTA)\n8. L200 MITSUBISHI 2024 – 24-018 (BAIXADA)\n9. L200 MITSUBISHI 2024 – 24-019 (PRONTA)\n10. L200 MITSUBISHI 2024 – 24-020 (BAIXADA)\n11. L200 MITSUBISHI 2024 – 24-021 (PRONTA)\n12. L200 MITSUBISHI 2024 – 24-022 (PRONTA)',
+   prop:'1. FORD RANGER 2021 – 21-122 (PRONTA)\n2. FORD RANGER 2021 – 21-119 (BAIXADA)'},
+  {gc:'CPI',upm:'29º BPM',tot:11,pron:10,bai:1,ins:1,
+   loc:'1. FORD RANGER - 2025 - PRONTA\n2. FORD RANGER - 2025 - PRONTA\n3. GM CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. FIAT WEEKEND - 2014 - PRONTA\n2. FORD RANGER - 2021 - BAIXADA\n3. FORD RANGER - 2021 - PRONTA\n4. FORD RANGER - 2021 - PRONTA\n5. FORD RANGER - 2021 - PRONTA\n6. FORD RANGER - 2021 - PRONTA\n7. FORD RANGER - 2021 - PRONTA\n8. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n9. FORD RANGER - 2017 - INSERVÍVEL'},
+  {gc:'CME',upm:'ROTAM',tot:7,pron:6,bai:1,ins:0,
+   loc:'NENHUMA EXISTENTE NA FROTA DA ROTAM',
+   prop:'1. FORD RANGER - 2017 - BAIXADA PARA MANUTENÇÃO\n2. TRAILBLAZER - 2026 - PRONTA\n3. TRAILBLAZER - 2026 - PRONTA\n4. TRAILBLAZER - 2026 - PRONTA\n5. TRAILBLAZER - 2026 - PRONTA\n6. TRAILBLAZER - 2026 - PRONTA\n7. TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPE',upm:'1º BMT',tot:7,pron:6,bai:1,ins:0,
+   loc:'Nenhuma VTR locada.',
+   prop:'1. FORD RANGER - 2021 - BAIXADA\n2. FORD RANGER - 2021 - OPERANDO\n3. L200 TRITON - 2024 - OPERANDO\n4. L200 TRITON - 2019 - OPERANDO\n5. TRAILBLAZER - 2026 - OPERANDO\n6. TRAILBLAZER - 2026 - OPERANDO\n7. TRAILBLAZER - 2026 - OPERANDO'},
+  {gc:'CPE',upm:'2º BPTUR',tot:18,pron:12,bai:4,ins:2,
+   loc:'1. TOYOTA HILUX - 2025 - PRONTA\n2. TOYOTA HILUX - 2025 - PRONTA\n3. TOYOTA HILUX - 2025 - PRONTA\n4. TOYOTA HILUX - 2025 - PRONTA\n5. CHEVROLET S10 - 2024 - BAIXADA\n6. MITSUBISHI L200 - 2024 - PRONTA\n7. FORD RANGER - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2021 - BAIXADA\n2. FORD RANGER - 2021 - BAIXADA\n3. FORD RANGER - 2021 - PRONTA\n4. FORD RANGER - 2021 - PRONTA\n5. FORD RANGER - 2021 - PRONTA\n6. FORD RANGER - 2021 - INSERVÍVEL\n7. FORD RANGER - 2018 - INSERVÍVEL\n8. MITSUBISHI L200 - 2021 - PRONTA\n9. MITSUBISHI L200 - 2024 - BAIXADA\n10. RENAULT DUSTER - 2023 - BAIXADA\n11. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'30º BPM',tot:10,pron:5,bai:2,ins:3,
+   loc:'1. MITSUBISHI L200 TRITON - 2024/2025 - PRONTA\n2. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n2. RENAULT DUSTER - 2022/2023 - PRONTA\n3. RENAULT DUSTER - 2014/2015 - BAIXADA\n4. FORD RANGER - 2017/2018 - INSERVÍVEL\n5. MITSUBISHI L200 TRITON - 2019/2020 - BAIXADA\n6. CHEVROLET S10 - 2019 - INSERVÍVEL\n7. FORD RANGER - 2020/2021 - INSERVÍVEL'},
+  {gc:'CPI',upm:'4º BPM',tot:20,pron:13,bai:5,ins:2,
+   loc:'1. S10 - 2023 - PRONTA\n2. S10 - 2023 - BAIXADA\n3. S10 - 2023 - PRONTA\n4. FORD RANGER - 2025 - PRONTA\n5. FORD RANGER - 2025 - BAIXADA\n6. L200 TRITON - 2024 - BAIXADA\n7. L200 TRITON - 2024 - PRONTA\n8. FORD RANGER - 2025 - PRONTA\n9. HILUX - 2025 - PRONTA\n10. HILUX - 2025 - PRONTA\n11. S10 - 2025 - BAIXADA\n12. S10 - 2025 - PRONTA\n13. S10 - 2025 - PRONTA\n14. S10 - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2017 - INSERVÍVEL\n2. FORD RANGER - 2021 - INSERVÍVEL\n3. L200 TRITON - 2021 - PRONTA\n4. FORD RANGER - 2021 - BAIXADA\n5. TRAILBLAZER - 2026 - PRONTA\n6. L200 TRITON - 2024 - PRONTA'},
+  {gc:'CPI',upm:'35º BPM',tot:12,pron:5,bai:1,ins:1,
+   loc:'1. FORD RANGER - 2024 - BAIXADA\n2. HILUX - 2024 - PRONTA\n3. L200 - 2024 - PRONTA\n4. S10 - 2025 - PRONTA',
+   prop:'1. DUSTER - 2014 - BAIXADA (INSERVÍVEL EM BREVE)\n2. DUSTER - 2023 - PRONTA\n3. RANGER - 2017 - PRONTA\n4. RANGER - 2020 - PRONTA\n5. L200 TRITON - 2024 - PRONTA'},
+  {gc:'CME',upm:'2º RPMONT',tot:4,pron:2,bai:1,ins:1,
+   loc:'1. HILUX - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2017 - INSERVÍVEL\n2. S10 - 2015 - MANUTENÇÃO\n3. TRAIL BLAZER - 2026 - PRONTA'},
+  {gc:'CME',upm:'BPCHOQUE',tot:9,pron:7,bai:2,ins:0,
+   loc:'Nenhuma viatura locada.',
+   prop:'1. FORD RANGER - 2020 - BAIXADA\n2. MITSUBISHI L200 - 2024 - OPERANDO\n3. VAN RENAULT MASTER - 2019 - BAIXADA\n4. CHEVROLET TRAILBLAZER - 2026 - OPERANDO\n5. CHEVROLET TRAILBLAZER - 2026 - OPERANDO\n6. CHEVROLET TRAILBLAZER - 2026 - OPERANDO\n7. CHEVROLET TRAILBLAZER - 2026 - OPERANDO\n8. CHEVROLET TRAILBLAZER - 2026 - OPERANDO\n9. ÔNIBUS IVECO MASCARELLO - 2023 - OPERANDO'},
+  {gc:'CPE',upm:'2º BMT',tot:3,pron:2,bai:1,ins:0,
+   loc:'1. L200 TRITON - 2024 - PRONTA',
+   prop:'1. FORD RANGER - 2018 - BAIXADA\n2. BLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'34º BPM',tot:10,pron:5,bai:0,ins:5,
+   loc:'1. HILUX - 2024 - PRONTA\n2. HILUX - 2025 - PRONTA\n3. S10 - 2022 - INSERVÍVEL',
+   prop:'1. BLAZER - 2026 - PRONTA\n2. L200 TRITON - 2024 - PRONTA\n3. L200 TRITON - 2023 - PRONTA\n4. RANGER - 2021 - INSERVÍVEL\n5. RANGER - 2017 - INSERVÍVEL\n6. RANGER - 2017 - INSERVÍVEL\n7. RANGER - 2017 - INSERVÍVEL'},
+  {gc:'CPI',upm:'11º BPM',tot:21,pron:11,bai:9,ins:4,
+   loc:'1. FORD RANGER 4X4 - BAIXADA\n2. FORD RANGER 4X4 - BAIXADA\n3. MITSUBISHI L-200 TRITON - BAIXADA\n4. CHEVROLET S-10 2.8 CTDI - BAIXADA\n5. CHEVROLET S-10 WT DD4 - OPERANDO\n6. CHEVROLET S-10 - OPERANDO',
+   prop:'1. MITSUBISHI L-200 TRITON - BAIXADA\n2. FIAT DUCATO VAN - EM USO\n3. FIAT PÁLIO WEEKEND - BAIXADA\n4. FIAT PÁLIO WEEKEND - BAIXADA\n5. FIAT PÁLIO WEEKEND - BAIXADA\n6. FORD RANGER 2.2/6AUTO - OPERANDO\n7. FORD RANGER 2.2/6AUTO - BAIXADA\n8. TOYOTA HILUX CD4X4 - OPERANDO\n9. FORD RANGER 2.2/6AUTO - OPERANDO\n10. RENAULT DUSTER 1.6 - OPERANDO\n11. RENAULT DUSTER 1.6 - OPERANDO\n12. MITSUBISHI L-200 TRITON - OPERANDO\n13. MITSUBISHI L-200 TRITON - OPERANDO\n14. MITSUBISHI L-200 TRITON - OPERANDO\n15. CHEVROLET TRAILBLAZER - 2026 - OPERANDO'},
+  {gc:'CPI',upm:'39º BPM',tot:22,pron:11,bai:6,ins:5,
+   loc:'1. CHEVROLET S10 - 2023 - PRONTA\n2. MITSUBISHI - 2023 - BAIXADA\n3. FORD RANGER - 2025 - PRONTA\n4. TOYOTA HILUX - 2024/2025 - PRONTA\n5. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. FORD RANGER 2021 - PRONTA\n2. FORD RANGER 2021 - BAIXADA\n3. FIAT PALIO WK ADVENTURE 2014 - BAIXADA\n4. FORD RANGER 2021 - PRONTA\n5. FORD RANGER 2021 - BAIXADA\n6. FORD RANGER 2017 - INSERVÍVEL\n7. FORD RANGER 2017 - INSERVÍVEL\n8. MITSUBISHI TRITON 2021 - BAIXADA\n9. FORD RANGER 2017 - PRONTA\n10. FORD RANGER 2017 - BAIXADA\n11. MITSUBISHI TRITON 2021 - PRONTA\n12. FORD RANGER 2017 - PRONTA\n13. MITSUBISHI TRITON 2019/2020 - INSERVÍVEL\n14. FORD RANGER 2017 - INSERVÍVEL\n15. FORD RANGER 2017 - INSERVÍVEL\n16. FORD RANGER 2021 - PRONTA\n17. CHEVROLET BLAZER 2026 - PRONTA'},
+  {gc:'CPI',upm:'23º BPM',tot:11,pron:7,bai:2,ins:2,
+   loc:'1. MITSUBISHI L200 TRITON - PLACA SMO2B25 - 2024 - PRONTA\n2. MITSUBISHI L200 TRITON - PLACA SMO0G06 - 2024 - PRONTA\n3. FORD RANGER - PLACA SMU 5C50 - 2025 - PRONTA\n4. FORD RANGER - PLACA SMU 5C38 - 2025 - PRONTA\n5. TOYOTA HILUX - PLACA SMV 9G51 - 2025 - PRONTA',
+   prop:'1. FORD RANGER - PLACA PSX 6458 - 2017 - BAIXADA\n2. FIAT PÁLIO WEEKEND - OXR-8919 - 2014 - INSERVÍVEL\n3. FORD RANGER - PLACA ROC 0G64 - 2021 - INSERVÍVEL\n4. TOYOTA YARIS - PLACA SGV 6E41 - 2023 - PRONTA\n5. MITSUBISHI L200 TRITON - SSI 9C04 - BAIXADA\n6. CHEVROLET TRAILBLAZER D4A - UJQ 2H09 - PRONTA'},
+  {gc:'CPI',upm:'7º BPM',tot:16,pron:15,bai:1,ins:0,
+   loc:'HILUX – 2025 – PRONTA\nDUSTER – 2023 – PRONTA\nL200 TRITON SPO GL – 2024/2025 – PRONTA\nCHEVROLET S10 LS DD4 – 2023/2024 – PRONTA\nFORD RANGER XLCD2D4M – 2025 – PRONTA\nCHEVROLET S10 WT DD4 – 2025 – PRONTA\nRANGER – 2021 – PRONTA\nL200 – 2019 – PRONTA\nL200 – 2019 – PRONTA\nRANGER – 2025 – PRONTA\nCHEVROLET S10 WT DD4 – 2025 – PRONTA\nRANGER – 2021 – PRONTA\nRANGER – 2018 – PRONTA\nTRAILBLAZER – 2026 – PRONTA',
+   prop:'DUSTER – 2023 – PRONTA\nRANGER – 2021 – PRONTA\nL200 – 2019 – PRONTA\nL200 – 2019 – PRONTA\nRANGER – 2025 – PRONTA\nRANGER – 2021 – PRONTA\nRANGER – 2018 – PRONTA\nTRAILBLAZER – 2026 – PRONTA'},
+  {gc:'CPI',upm:'3º BPM',tot:14,pron:7,bai:7,ins:0,
+   loc:'1. CHEVROLET S-10 - 2025 - PRONTA\n2. CHEVROLET S-10 - 2020 - PRONTA\n3. CHEVROLET S-10 - 2024 - PRONTA\n4. FORD RANGER - 2025 - BAIXADA (enviada para SLZ desde 28/11/2025)\n5. FORD RANGER - 2025 - BAIXADA (enviada para SLZ desde 18/04/2026)\n6. MITSUBISHI L200 - 2024 - BAIXADA (enviada para SLZ desde 15/04/2026)',
+   prop:'1. MITSUBISHI L200 - 2024 - PRONTA\n2. FORD RANGER - 2021 - PRONTA\n3. MITSUBISHI L200 - 2023 - BAIXADA\n4. MITSUBISHI L200 - 2023 - PRONTA\n5. MITSUBISHI L200 - 2024 - BAIXADA\n6. MITSUBISHI L200 - 2024 - BAIXADA\n7. FORD RANGER - 2021 - BAIXADA\n8. CHEVROLET S-10 TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'14º BPM',tot:16,pron:12,bai:3,ins:1,
+   loc:'1. MITSUBISHI L-200 - 2024 - BAIXADA\n2. CHEVROLET S-10 - 2022/2023 - PRONTA\n3. FORD RANGER - 2025 - BAIXADA\n4. CHEVROLET S-10 - 2023/2024 - PRONTA\n5. CHEVROLET S10 - 2025 - PRONTA\n6. FORD RANGER - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2021 - PRONTA\n2. FORD RANGER - 2021/2022 - PRONTA\n3. MITSUBISHI L-200 - 2024/2025 - PRONTA\n4. MITSUBISHI L-200 - 2024/2025 - PRONTA\n5. MITSUBISHI L200 - 2024/2025 - PRONTA\n6. FORD RANGER - 2021/2022 - BAIXADA\n7. MITSUBISHI TRITON SPORT - 2024/2025 - PRONTA\n8. FORD RANGER - 2017 - INSERVÍVEL\n9. TOYOTA HILUX - 2017 - PRONTA\n10. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPE',upm:'1º CIMT',tot:1,pron:1,bai:0,ins:1,
+   loc:'Nenhuma viatura locada.',
+   prop:'1. FORD RANGER - 2017 - INSERVÍVEL'},
+  {gc:'CSC',upm:'CSC',tot:7,pron:6,bai:1,ins:0,
+   loc:'1. FIAT ARGO - 2025 - PRONTA',
+   prop:'1. MITSUBISHI L200 TRITON - 2024 - BAIXADA PARA MANUTENÇÃO'},
+  {gc:'CPI',upm:'5º BPM',tot:16,pron:9,bai:5,ins:2,
+   loc:'FORD RANGER - 2024 - BAIXADA\nTRITON - 2024 - PRONTA\nHILUX - 2024 - PRONTA\nS10 - 2023 - PRONTA',
+   prop:'TRAILBLAZER - 2026 - PRONTA\nTRAILBLAZER - 2026 - PRONTA\nTRAILBLAZER - 2026 - PRONTA\nTRITON - 2024 - PRONTA\nFORD RANGER - 2017 - PRONTA\nDUSTER - 2023 - BAIXADA\nPAJERO DAKAR - 2012 - PRONTA\nTOYOTA BANDEIRANTE - 1991 - BAIXADA\nFORD RANGER - 2020 - INSERVÍVEL\nFORD RANGER - 2020 - INSERVÍVEL\nFORD RANGER - 2017 - BAIXADA\nPALIO ADVENTURE - 2014 - BAIXADA'},
+  {gc:'CPI',upm:'31º BPM',tot:16,pron:10,bai:3,ins:3,
+   loc:'MITSUBISHI L200 - 2025 - PRONTA\nCHEVROLET S10 - 2023 - PRONTA\nTOYOTA HILUX - 2025 - PRONTA\nFORD RANGER - 2025 - PRONTA',
+   prop:'MITSUBISHI L200 TRITON 2019 - PRONTA\nMITSUBISHI L200 TRITON 2018 - PRONTA\nMITSUBISHI L200 TRITON 23/24 - BAIXADA\nFORD RANGER 2021 - PRONTA\nFORD RANGER 2021 - PRONTA\nFORD RANGER 2021 - BAIXADA\nFORD RANGER 2021 - PRONTA\nFORD RANGER 2021 - BAIXADA\nFORD RANGER 2021 - INSERVÍVEL\nFORD RANGER 2017 - INSERVÍVEL\nFORD RANGER 2021 - INSERVÍVEL\nCHEVROLET TRAILBLAZER 2026 - PRONTA'},
+  {gc:'CPE',upm:'BPA',tot:10,pron:4,bai:2,ins:4,
+   loc:'Nenhuma viatura locada.',
+   prop:'1. RENAULT KWID - 2020 - (CEDIDO MP-MA) - BAIXADA\n2. HONDA CIVIC - 2017 - (CEDIDO MP-MA) - BAIXADA\n3. CHEVROLET S10 - 2018/2019 - (CEDIDO MP-MA) - BAIXADA\n4. DODGE RAM - 2009 - (CEDIDO MP-MA) - BAIXADA\n5. DODGE RAM - 2012 - (CEDIDO MP-MA) - PRONTO\n6. FORD RANGER - 2020/2021 - BAIXADA\n7. MERCEDES BENZ SPRINTER (VAN) 2017 - BAIXADA\n8. MITSUBISHI L200 - 2016 - PRONTO\n9. CHEVROLET TRAILBLAZER - 2026 - PRONTO\n10. QUADRICICLO VENTURA 500 PROMAX - 2026 - PRONTO'},
+  {gc:'CPI',upm:'12º BPM',tot:8,pron:11,bai:3,ins:8,
+   loc:'1. S10 CHEVROLET - 2025 - PRONTA\n2. S10 CHEVROLET - 2025 - PRONTA\n3. S10 CHEVROLET - 2025 - PRONTA\n4. TRAILBLAZER CHEVROLET - 2026 - PRONTA\n5. DUSTER RENAULT - 2024 - PRONTA\n6. RANGER FORD - 2022 - PRONTA\n7. RANGER FORD - 2021 - PRONTA\n8. RANGER FORD - 2025 - PRONTA\n9. HILUX TOYOTA - 2024 - PRONTA\n10. YARIS TOYOTA - 2024 - PRONTA\n11. DUSTER RENAULT - 2024 - BAIXADA\n12. RANGER FORD - 2021 - BAIXADA\n13. RANGER FORD - 2022 - BAIXADA\n14. RANGER FORD - 2017 - INSERVÍVEL\n15. RANGER FORD - 2017 - INSERVÍVEL\n16. RANGER FORD - 2017 - INSERVÍVEL\n17. RANGER FORD - 2011 - INSERVÍVEL\n18. RANGER FORD - 2018 - INSERVÍVEL\n19. L200 TRITON - 2013 - INSERVÍVEL\n20. L200 TRITON - 2020 - INSERVÍVEL\n21. L200 TRITON - 2020 - INSERVÍVEL',
+   prop:'1. TRAILBLAZER CHEVROLET - 2026 - PRONTA\n2. DUSTER RENAULT - 2024 - PRONTA\n3. RANGER FORD - 2022 - PRONTA\n4. RANGER FORD - 2021 - PRONTA\n5. YARIS TOYOTA - 2024 - PRONTA\n6. DUSTER RENAULT - 2024 - BAIXADA\n7. RANGER FORD - 2021 - BAIXADA\n8. RANGER FORD - 2022 - BAIXADA\n9. RANGER FORD - 2017 - INSERVÍVEL\n10. RANGER FORD - 2017 - INSERVÍVEL\n11. RANGER FORD - 2017 - INSERVÍVEL\n12. RANGER FORD - 2011 - INSERVÍVEL\n13. RANGER FORD - 2018 - INSERVÍVEL\n14. L200 TRITON - 2013 - INSERVÍVEL\n15. L200 TRITON - 2020 - INSERVÍVEL\n16. L200 TRITON - 2020 - INSERVÍVEL'},
+  {gc:'CPI',upm:'2º BPM',tot:16,pron:8,bai:3,ins:5,
+   loc:'1. FORD RANGER - 2025 - BAIXADA\n2. CHEVROLET S10 - 2023 - BAIXADA\n3. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. CHEVROLET TRAIL BLAZER - 2026 - PRONTA\n2. CHEVROLET TRAIL BLAZER - 2026 - PRONTA\n3. TOYOTA YARIS - 2023/2024 - PRONTA\n4. TOYOTA YARIS - 2023 - PRONTA\n5. FORD RANGER - 2021/2022 - PRONTA\n6. MITSUBISHI L200 TRITON - 2015 - PRONTA\n7. MITSUBISHI L200 TRITON SPORT - 2024/2025 - PRONTA\n8. MITSUBISHI L200 TRITON - 2021/2022 - BAIXADA\n9. MITSUBISHI PAJERO DAKAR - 2012 - INSERVÍVEL\n10. MITSUBISHI PAJERO DAKAR - 2016 - INSERVÍVEL\n11. MITSUBISHI PAJERO DAKAR - 2016 - INSERVÍVEL\n12. FORD RANGER - 2021/2022 - INSERVÍVEL\n13. MITSUBISHI L200 OUTDOOR - 2008 - INSERVÍVEL'},
+  {gc:'CPI',upm:'33º BPM',tot:19,pron:8,bai:4,ins:7,
+   loc:'1. S10 - 2023 - PRONTA\n2. L200 - 2024 - BAIXADA\n3. RANGER 2024 - BAIXADA\n4. S10 - 2025 - PRONTA\n5. S10 - 2023 - BAIXADA',
+   prop:'1. RANGER - 2017 - INSERVÍVEL\n2. RANGER - 2017 - INSERVÍVEL\n3. L200 - 2019 - INSERVÍVEL\n4. L200 - 2019 - INSERVÍVEL\n5. L200 - 2019 - BAIXADA\n6. PAJERO 2012 - INSERVÍVEL\n7. L200 - 2012 - INSERVÍVEL\n8. PALIO 2014 - INSERVÍVEL\n9. DUSTER - 2022 - PRONTA\n10. L200 - 2023 - PRONTA\n11. YARIS - 2023 - PRONTA\n12. L200 - 2024 - PRONTA\n13. L200 - 2024 - PRONTA\n14. TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'16º BPM',tot:23,pron:14,bai:5,ins:4,
+   loc:'1. MITSUBISHI TRITON - 2024 - PRONTA\n2. FORD RANGER - 2024 - BAIXADA\n3. TOYOTA HILUX - 2024 - PRONTA\n4. TOYOTA HILUX - 2024 - PRONTA\n5. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2017 - PRONTA\n2. FORD RANGER - 2021 - PRONTA\n3. FORD RANGER - 2021 - PRONTA\n4. FORD RANGER - 2021 - PRONTA\n5. FORD RANGER - 2021 - PRONTA\n6. RENAULT DUSTER - 2025 - PRONTA\n7. RENAULT DUSTER - 2025 - PRONTA\n8. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n9. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n10. MITSUBISHI TRITON - 2019 - PRONTA\n11. FORD RANGER - 2017 - BAIXADA\n12. FORD RANGER - 2017 - BAIXADA\n13. FORD RANGER - 2017 - BAIXADA\n14. FORD RANGER - 2021 - BAIXADA\n15. FORD RANGER - 2017 - INSERVÍVEL\n16. MITSUBISHI TRITON - 2012 - INSERVÍVEL\n17. FIAT PÁLIO ADV - 2014 - INSERVÍVEL\n18. FORD FIESTA - 2012 - INSERVÍVEL'},
+  {gc:'CPI',upm:'28º BPM',tot:22,pron:7,bai:3,ins:11,
+   loc:'1. MITSUBISHI L200 - 2024 - PRONTA\n2. FORD RANGER - 2025 - PRONTA\n3. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. L200 - 2026 - PRONTA\n2. DUSTER - 2023 - PRONTA\n3. DUSTER - 2023 - PRONTA\n4. L-200 - 2024 - PRONTA\n5. FORD RANGER - 2021 - BAIXADA\n6. L-200 - 2018 - BAIXADA\n7. L-200 - 2018 - BAIXADA\n8. PAJERO - 2016 - INSERVÍVEL\n9. RANGER - 2021 - INSERVÍVEL\n10. TRITON - 2012 - INSERVÍVEL\n11. RANGER - 2017 - INSERVÍVEL\n12. PAJERO - 2016 - INSERVÍVEL\n13. PAJERO - 2013 - INSERVÍVEL\n14. PAJERO - 2016 - INSERVÍVEL\n15. PÁLIO WEEKEND - 2014 - INSERVÍVEL\n16. PÁLIO WEEKEND - 2014 - INSERVÍVEL\n17. PÁLIO WEEKEND - 2014 - INSERVÍVEL\n18. PÁLIO WEEKEND - 2014 - INSERVÍVEL'},
+  {gc:'CPE',upm:'1º BPTUR',tot:15,pron:12,bai:3,ins:0,
+   loc:'1. S10 - RWO 7B74 - 2021 - PRONTA\n2. S10 - SND 1C64 - 2021 - PRONTA',
+   prop:'1. RANGER - PBE 8943 - 2017 - PRONTA\n2. DUSTER - ROR-8F09 - 2023 - BAIXADA\n3. YARIS - SMU 6I19 - 2024 - PRONTA\n4. YARIS - SMU 6I37 - 2024 - PRONTA\n5. YARIS - SNJ 7C99 - 2024 - BAIXADA\n6. YARIS - SNJ 7C76 - 2024 - BAIXADA\n7. YARIS - SNJ 8B84 - 2024 - PRONTA\n8. YARIS - SNJ 7C80 - 2024 - PRONTA\n9. YARIS - SNJ 7C91 - 2024 - PRONTA\n10. YARIS - SNJ 7C94 - 2024 - PRONTA\n11. YARIS - SND 7D05 - 2024 - PRONTA\n12. YARIS - SNJ 7D11 - 2024 - PRONTA\n13. L200 - SSP 6B45 - 2025 - PRONTA'},
+  {gc:'CPI',upm:'37º BPM',tot:12,pron:7,bai:2,ins:4,
+   loc:'1. S10 - 2025 - PRONTA\n2. S10 - 2025 - BAIXADA PARA MANUTENÇÃO',
+   prop:'1. L200 TRITON - 2019 - PRONTA\n2. L200 TRITON - 2024 - PRONTA\n3. FORD RANGER - 2021 - PRONTA\n4. PALIO WEK - 2014 - PRONTA (ADM-DESCARACTERIZADA)\n5. ECO SPORT - 2013 - PRONTA (PATRULHA MARIA DA PENHA - DOAÇÃO)\n6. PAJERO DAKAR - 2015 - BAIXADA\n7. FORD RANGER - 2017 - INSERVÍVEL\n8. FORD RANGER - 2020 - INSERVÍVEL\n9. FORD RANGER - 2020 - INSERVÍVEL\n10. FORD RANGER - 2021 - INSERVÍVEL'},
+  {gc:'CPI',upm:'18º BPM',tot:32,pron:20,bai:2,ins:10,
+   loc:'3 MITSUBISHI L200 - 2024 - OPERANDO\n1 CHEVROLET S10 - 2023 - BAIXADA\n2 CHEVROLET S10 - 2025 E 2021 - OPERANDO\n2 FORD RANGER - 2025 - OPERANDO\n4 TOYOTA HILUX - 2025 - OPERANDO',
+   prop:'1. FORD RANGER 2017 - BAIXADA\n3. FORD RANGER 2021 - OPERANDO\n4. FORD RANGER 2017 E 1 DE 2021 - TEAM 002/2026\n5. FORD RANGER 2017 - TEAM 001/2025\n1. PÁLIO WEEKEND ADVENTURE 2014 - TEAM 001/2025'},
+  {gc:'CPI',upm:'46º BPM',tot:12,pron:9,bai:3,ins:0,
+   loc:'1. FORD RANGER - 2025 - BAIXADA\n2. MITSUBISHI L200 TRITON - 2024 - PRONTA\n3. CHEVROLET S10 - 2025 - PRONTA\n4. CHEVROLET S10 - 2025 - PRONTA\n5. CHEVROLET S10 - 2025 - PRONTA\n6. CHEVROLET S10 - 2025 - PRONTA\n7. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2017 - PRONTA\n2. FORD RANGER - 2021 - PRONTA\n3. FORD RANGER - 2021 - BAIXADA\n4. MITSUBISHI L200 TRITON - 2019 - PRONTA\n5. MITSUBISHI L200 TRITON - 2024 - BAIXADA'},
+  {gc:'CPI',upm:'36º BPM',tot:22,pron:7,bai:4,ins:4,
+   loc:'1. S10 LS DD4 - 2023/2024 - BAIXADA\n2. L200 TRITON SPO GL - 2024/2025 - OPERANDO\n3. RANGER 4X4 - 2025 - BAIXADA\n4. HILUX CDLOWM4FD - 2025 - OPERANDO\n5. S10 WT DD4 4X4 - 2025 - BAIXADA\n6. S10 WT DD4 4X4 - 2025 - OPERANDO\n7. S10 WT DD4 4X4 - 2025 - OPERANDO',
+   prop:'1. TRAILBLAZER - 2026 - PRONTA\n2. RANGER 2.2/6 AUTO - 2020/2021 - PRONTA\n3. RANGER 2.2/6 AUTO - 2020/2021 - PRONTA\n4. RANGER 2.2/6 AUTO - 2020/2021 - PRONTA\n5. RANGER 2.2/6 AUTO - 2020/2021 - PRONTA\n6. RANGER 2.2/6 AUTO - 2020/2021 - PRONTA\n7. RANGER 2.2/6 AUTO - 2020/2021 - PRONTA\n8. RANGER 2.2/6 AUTO - 2020/2021 - BAIXADA\n9. RANGER XLS - 2021 - BAIXADA\n10. RANGER XLS - 2021 - BAIXADA\n11. DUSTER - 2023 - BAIXADA\n12. S10 4X4 - 2019/2020 - INSERVÍVEL\n13. L200 TRITON - 2018/2019 - INSERVÍVEL\n14. L200 TRITON - 2018/2019 - INSERVÍVEL\n15. L200 TRITON - 2018/2019 - INSERVÍVEL'},
+  {gc:'CPI',upm:'45º BPM',tot:9,pron:6,bai:1,ins:2,
+   loc:'1. FORD RANGER - 2025 - OPERANDO\n2. TOYOTA HILUX - 2025 - OPERANDO\n3. CHEVROLET S10 - 2025 - BAIXADA',
+   prop:'1. MITSUBISHI L200 TRITON - 2019 - OPERANDO\n2. CHEVROLET TRAILBLAZER - 2026 - OPERANDO\n3. FORD RANGER - 2017 - INSERVÍVEL\n4. MITSUBISHI L200 TRITON - 2020 - OPERANDO\n5. FIAT PALIO - 2014 - INSERVÍVEL\n6. MITSUBISHI L200 TRITON - 2024 - OPERANDO'},
+  {gc:'CPI',upm:'32º BPM',tot:9,pron:5,bai:2,ins:2,
+   loc:'1. L-200 - 2024 - PRONTA\n2. RANGER - 2025 - PRONTA\n3. S-10 - 2025 - PRONTA',
+   prop:'1. L-200 - 2019 - INSERVÍVEL\n2. L-200 - 2019 - INSERVÍVEL\n3. RANGER - 2021 - PRONTA\n4. YARIS - 2024 - PRONTA\n5. RANGER - 2021 - BAIXADA PARA MANUTENÇÃO\n6. RANGER - 2021 - BAIXADA PARA MANUTENÇÃO'},
+  {gc:'CPI',upm:'27º BPM',tot:22,pron:7,bai:7,ins:8,
+   loc:'1. S-10 - 2022 - BAIXADA\n2. L200 TRITON - 2024 - BAIXADA\n3. RANGER - 2024 - BAIXADA\n4. S-10 - 2025 - BAIXADA\n5. L200 TRITON - 2024 - OPERANDO\n6. HILUX - 2025 - OPERANDO',
+   prop:'1. L200 - 2021 - BAIXADA\n2. RANGER - 2021 - BAIXADA\n3. L200 TRITON - 2017 - BAIXADA\n4. L200 TRITON - 2024 - PRONTA\n5. TRAILBLAZER - 2026 - PRONTA\n6. L200 TRITON - 2025 - PRONTA\n7. DUSTER - 2023 - PRONTA\n8. L200 - 2012 - PRONTA\n9. L200 TRITON - 2021 - INSERVÍVEL\n10. RANGER - 2021 - INSERVÍVEL\n11. RANGER - 2021 - INSERVÍVEL\n12. PALIO - 2014 - INSERVÍVEL\n13. RANGER - 2017 - INSERVÍVEL\n14. PAJERO - 2010 - INSERVÍVEL\n15. PAJERO - 2015 - INSERVÍVEL\n16. PAJERO - 2016 - INSERVÍVEL'},
+  {gc:'CPI',upm:'10º BPM',tot:28,pron:12,bai:5,ins:11,
+   loc:'1. S10 - 2024 - PRONTA\n2. L200 – 2024 - PRONTA\n3. S10 – 2024 - BAIXADA MANUTENÇÃO\n4. HILUX – 2025 - PRONTA\n5. S10 – 2025 - PRONTA\n6. S10 – 2025 - BAIXADA MANUTENÇÃO\n7. RANGER – 2025 - BAIXADA MANUTENÇÃO',
+   prop:'1. S10 – 2019 - PRONTA\n2. RANGER – 2017 - PRONTA\n3. RANGER – 2021 - PRONTA\n4. RANGER – 2021 - PRONTA\n5. RANGER – 2021 - PRONTA\n6. DUSTER – 2023 - PRONTA\n7. TRAILBLAZER – 2026 - PRONTA\n8. TRAILBLAZER – 2026 - PRONTA\n9. RANGER – 2021 - BAIXADA MANUTENÇÃO\n10. L200 TRITON – 2021 - BAIXADA MANUTENÇÃO\n11. PÁLIO ADVENTURE – 2014 - INSERVÍVEL\n12. PÁLIO ADVENTURE – 2014 - INSERVÍVEL\n13. L200 TRITON - 2012 - INSERVÍVEL\n14. RANGER – 2017 - INSERVÍVEL\n15. RANGER – 2017 - INSERVÍVEL\n16. RANGER – 2017 - INSERVÍVEL\n17. RANGER – 2017 - INSERVÍVEL\n18. L200 TRITON – 2012 - INSERVÍVEL\n19. RANGER – 2021 - INSERVÍVEL\n20. FIAT TORO – 2022 - INSERVÍVEL\n21. PAJERO DAKAR – 2012 - INSERVÍVEL'},
+  {gc:'CPI',upm:'25º BPM',tot:12,pron:4,bai:2,ins:6,
+   loc:'1. TOYOTA HILUX - 2025 - PRONTA (VP 25-267)\n2. TOYOTA HILUX - 2025 - PRONTA (VP 25-277)\n3. TOYOTA HILUX - 2025 - BAIXADA (VP 25-284)\n4. TOYOTA HILUX - 2025 - BAIXADA (VP 25-278)\n5. CHEVROLET S10 - 2024 - PRONTA (VP 24-482)',
+   prop:'1. FORD RANGER - 2017 - INSERVÍVEL (VP 17-027)\n2. MITSUBISHI L200 - 2019/2020 - INSERVÍVEL (VP 19-147)\n3. HONDA XRE 300 - 2022/2023 - PRONTA (MT 22-081)\n4. HONDA XRE 300 - 2017 - PRONTA (MT 17-107)\n5. HONDA XRE 300 - 2017 - BAIXADA (MT 17-108)\n6. HONDA XRE 300 - 2017 - BAIXADA (MT 17-109)\n7. HONDA XRE 300 - 2017 - INSERVÍVEL (MT 17-105)\n8. YAMAHA LANDER XTZ 250 - 2012 - PRONTA (MT 12-059)\n9. YAMAHA LANDER XTZ 250 - INSERVÍVEL (MT 12-138)\n10. FIAT PÁLIO - 2014 - INSERVÍVEL (VP 14-077)\n11. MITSUBISHI PAJERO - 2010 - INSERVÍVEL (PM 018)\n12. FORD FIESTA - 2013 - INSERVÍVEL (FP 12-128)\n13. CHEVROLET BLAZER - 2009 - INSERVÍVEL (VPM 09-002)\n14. MITSUBISHI L200 - 2019/2020 - PRONTA (VP 19-146)'},
+  {gc:'CPI',upm:'41º BPM',tot:11,pron:7,bai:5,ins:3,
+   loc:'1. HILUX - 2025/2026 - PRONTA (PLACA SMV9G74)\n2. S10 - 2025 - PRONTA (PLACA SNA7D21)',
+   prop:'1. FORD RANGER - 2021 - OPERANDO\n2. FORD RANGER - 2021 - OPERANDO\n3. FORD RANGER - 2021 - BAIXADA\n4. MITSUBISHI L200 TRITON - 2018 - BAIXADA\n5. MITSUBISHI L200 TRITON - 2021 - OPERANDO\n6. FORD RANGER - 2017 - BAIXADA\n7. MITSUBISHI L200 - 2018 - BAIXADA\n8. L200 TRITON - 2018 - BAIXADA\n9. TRAILBLAZER - 2026 - OPERANDO'},
+  {gc:'CPI',upm:'15º BPM',tot:20,pron:12,bai:4,ins:4,
+   loc:'L200 TRITON - 2024 - BAIXADA\nL200 TRITON - 2024 - OPERANDO\nL200 TRITON - 2024 - BAIXADA\nL200 TRITON - 2024 - BAIXADA',
+   prop:'VOYAGE – 2014 – OPERANDO\nL200 TRITON – 2019/2020 – INSERVÍVEL\nPÁLIO WK ADVENTURE – 2014 – DESCARREGADA\nL200 TRITON – 2016/2017 – DESCARREGADA\nFORD RANGER – 2017 – DESCARREGADA\nFORD RANGER – 2021 – OPERANDO\nFORD RANGER – 2020/2021 – OPERANDO\nFORD RANGER – 2020/2021 – BAIXADA\nFORD RANGER – 2020/2021 - OPERANDO\nFORD RANGER – 2020/2021 - OPERANDO\nDUSTER – 2023 – OPERANDO\nFORD RANGER – 2025 – OPERANDO\nFORD RANGER – 2025 - OPERANDO\nTRAILBLAZER – 2026 – OPERANDO\nTRAILBLAZER – 2026 - OPERANDO'},
+  {gc:'CPI',upm:'26º BPM',tot:22,pron:6,bai:4,ins:12,
+   loc:'1. MITSUBISHI - 24/25 - PRONTA\n2. FORD RANGER - 25/25 - BAIXADA',
+   prop:'1. CHEVROLET S10 - 19/20 - BAIXADA\n2. FORD RANGER - 2021 - PRONTA\n3. FORD RANGER - 2021 - PRONTA\n4. FORD RANGER - 20/21 - PRONTA\n5. DUSTER - 23/24 - BAIXADA\n6. MITSUBISHI L200 - 12/13 - BAIXADA\n7. FORD RANGER - 2021 - INSERVÍVEL\n8. MITSUBISHI L200 - 24/25 - PRONTA\n9. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n10. DUSTER - 14/15 - INSERVÍVEL\n11. MITSUBISHI PAJERO - 12/13 - INSERVÍVEL\n12. MITSUBISHI PAJERO - 2012 - INSERVÍVEL\n13. VOLKSWAGEN GOL - 04/05 - INSERVÍVEL\n14. MITSUBISHI - 2011 - INSERVÍVEL\n15. CHEVROLET - 03/04 - INSERVÍVEL\n16. VOLKSWAGEN GOL - 04/05 - INSERVÍVEL\n17. BANDEIRANTES - 1998 - INSERVÍVEL\n18. CHEVROLET BLAZER - 02/03 - INSERVÍVEL\n19. CHEVROLET BLAZER - 2003 - INSERVÍVEL\n20. VOLKSWAGEN GOL - 1989 - INSERVÍVEL'},
+  {gc:'CPM',upm:'42º BPM',tot:7,pron:3,bai:4,ins:0,
+   loc:'FORD RANGER - 2024 - BAIXADA\nCHEVROLET S10 - 2023 - BAIXADA\nCHEVROLET S10 - 2022 - PRONTA\nCHEVROLET S10 - 2022 - BAIXADA',
+   prop:'CHEVROLET TRAILBLAZER - 2026 - PRONTA\nFORD RANGER - 2020 - PRONTA\nL200 TRITON - 2023 - BAIXADA'},
+  {gc:'CPM',upm:'6º BPM',tot:8,pron:5,bai:3,ins:0,
+   loc:'1. HILLUX - 2024 - PRONTO\n2. S10 - 2023 - PRONTO\n3. S-10 - 2023 - PRONTO\n4. TRITON - 2024 - BAIXADA\n5. HILLUX - 2024 - BAIXADA',
+   prop:'1. RANGER - 2022 - PRONTO\n2. TRAILBLAZER - 2026 - PRONTO\n3. DUSTER - 2023 - BAIXADA'},
+  {gc:'CPM',upm:'22º BPM',tot:7,pron:3,bai:4,ins:0,
+   loc:'1. MITSUBISHI L200 TRITON – 2024 – VP 24-449 – PRONTA\n2. FORD RANGER – 2025 – VP 25-214 – BAIXADA\n3. CHEVROLET S10 – 2025 – VP 25-339 – BAIXADA',
+   prop:'1. MITSUBISHI L200 TRITON – 2021 – VP 21-080 – PRONTA\n2. FORD RANGER – 2021 – VP 21-153 – BAIXADA\n3. CHEVROLET TRAILBLAZER – 2026 – VP 26-069 – PRONTA\n4. RENAULT DUSTER – 2023 – VP 23-017 – BAIXADA'},
+  {gc:'CPM',upm:'38º BPM',tot:6,pron:5,bai:1,ins:0,
+   loc:'1. MITSUBISHI L200 TRITON - 2024 - PRONTA\n2. CHEVROLET S10 - 2025 - PRONTA\n3. FORD RANGER - 2025 - PRONTA\n4. FORD RANGER - 2025 - BAIXADA PARA MANUTENÇÃO',
+   prop:'1. FORD RANGER - 2021 - PRONTA\n2. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPM',upm:'40º BPM',tot:11,pron:7,bai:4,ins:0,
+   loc:'1. MITSUBISHI L200 - 2024 - PRONTA\n2. FORD RANGER - 2025 - BAIXADA\n3. FORD RANGER - 2025 - BAIXADA\n4. FORD RANGER - 2025 - PRONTA\n5. CHEVROLET S10 - 2025 - PRONTA\n6. FORD RANGER - 2025 - BAIXADA\n7. CHEVROLET S10 - 2025 - PRONTA',
+   prop:'1. FORD RANGER - 2021 - BAIXADA\n2. RENAULT DUSTER - 2023 - PRONTA\n3. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n4. FORD RANGER - 2021 - PRONTA'},
+  {gc:'CPM',upm:'43º BPM',tot:11,pron:3,bai:8,ins:0,
+   loc:'1. FORD RANGER - 2025 - BAIXADA\n2. FORD RANGER - 2025 - BAIXADA\n3. MITSUBISHI L200 - 2024 - PRONTA\n4. CHEVROLET S10 - 2023 - BAIXADA\n5. MITSUBISHI L200 - 2023 - PRONTA',
+   prop:'1. FORD RANGER - 2021 - BAIXADA\n2. FORD RANGER - 2021 - BAIXADA\n3. MITSUBISHI L200 - 2021 - BAIXADA\n4. RENAULT DUSTER - 2023 - BAIXADA\n5. RENAULT DUSTER - 2023 - BAIXADA\n6. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPM',upm:'21º BPM',tot:9,pron:4,bai:3,ins:2,
+   loc:'1. MITSUBISHI L200 - 2024 - SMO 2B80 - OPERANDO\n2. MITSUBISHI L200 - 2024 - SMO 2A29 - BAIXADA\n3. FORD RANGER - 2025 - SMT 7A13 - BAIXADA\n4. CHEVROLET S10 - 2023 - RXC 4J04 - BAIXADA',
+   prop:'1. MITSUBISHI PAJERO DAKAR - PSL 6099 - 2015 - INSERVÍVEL\n2. MITSUBISHI PAJERO DAKAR - PSL 3633 - 2015 - INSERVÍVEL\n3. RENAULT DUSTER - 23/24 - ROR 7D27 - OPERANDO\n4. RENAULT DUSTER - 23/24 - ROR 8E87 - OPERANDO\n5. CHEVROLET TRAILBLAZER - 2026 - UJQ 2E44 - OPERANDO'},
+  {gc:'CPM',upm:'13º BPM',tot:9,pron:5,bai:4,ins:0,
+   loc:'1. FORD RANGER - 2025 - PRONTA\n2. HILUX - 2024 - PRONTA\n3. S10 - 2025 - PRONTA\n4. L200 - 2025 - PRONTA\n5. L200 - 2025 - BAIXADA',
+   prop:'1. RANGER - 2021 - BAIXADA\n2. RANGER - 2021 - BAIXADA\n3. L200 - 2021 - BAIXADA\n4. TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPM',upm:'1º BPM',tot:12,pron:4,bai:5,ins:1,
+   loc:'1. VP 24 401 - L200 - 2024 - BAIXADA\n2. VP 24 506 - L200 - 2024 - BAIXADA\n3. VP 25 205 - FORD RANGER - 2025 - PRONTA\n4. VP 25 206 - FORD RANGER - 2025 - PRONTA\n5. VP 25 207 - FORD RANGER - 2025 - PRONTA\n6. VP RESERVA - SNL 8F95 - S10 - 2024 - BAIXADA\n7. VP RESERVA - SNL 8E45 - S10 - 2024 - A DISPOSIÇÃO DO 21º BPM',
+   prop:'1. VP 18 162 - SANDERO - 2018 - INSERVÍVEL\n2. VP 21 120 - FORD RANGER - 2021 - BAIXADA\n3. VP 21 121 - FORD RANGER - 2021 - BAIXADA\n4. VP 23 027 - DUSTER - 2023 - BAIXADA\n5. VP 25 088 - TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPM',upm:'9º BPM',tot:8,pron:4,bai:4,ins:0,
+   loc:'1. MITSUBISHI L200 - 24/25 - BAIXADA\n2. CHEVROLET S10 - 23/24 - BAIXADA\n3. MITSUBISHI L200 - 24/25 - OPERANDO\n4. CHEVROLET S10 - 25/26 - OPERANDO\n5. CHEVROLET S10 - 24/25 - OPERANDO',
+   prop:'1. FORD RANGER - 21/22 - BAIXADA\n2. RENAULT DUSTER - 23/24 - BAIXADA\n3. CHEVROLET TRAILBLAZER - 26/26 - OPERANDO'},
+  {gc:'CPM',upm:'20º BPM',tot:13,pron:5,bai:8,ins:0,
+   loc:'1. RANGER - 2025 - BAIXADA\n2. HILUX - 2024 - BAIXADA\n3. S10 - 2024 - BAIXADA\n4. HILUX - 2025 - PRONTA\n5. S10 - 2024 - BAIXADA',
+   prop:'1. DUSTER - 2023 - BAIXADA\n2. DUSTER - 2023 - BAIXADA\n3. RANGER - 2021 - BAIXADA\n4. RANGER - 2021 - BAIXADA\n5. YARIS - 2025 - PRONTO\n6. TRAILBLAZER - 2026 - PRONTO\n7. TRAILBLAZER - 2026 - PRONTO\n8. TRAILBLAZER - 2026 - PRONTO'},
+  {gc:'CPM',upm:'8º BPM',tot:13,pron:8,bai:5,ins:4,
+   loc:'1. FORD RANGER - 2021 - PRONTA\n2. MITSUBISHI L200 - 2024 - PRONTA\n3. FORD RANGER - 2025 - INSERVÍVEL\n4. TOYOTA HILUX - 2024 - INSERVÍVEL\n5. L200 MITSUBISHI - 2024 - INSERVÍVEL\n6. CHEVROLET S10 - 2023 - BAIXADA\n7. FORD RANGER - 2021 - INSERVÍVEL',
+   prop:'1. TOYOTA YARIS - 2024 - PRONTA\n2. FORD RANGER - 2022 - PRONTA\n3. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n4. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n5. CHEVROLET TRAILBLAZER - 2026 - PRONTA\n6. CHEVROLET TRAILBLAZER - 2026 - PRONTA'},
+  {gc:'CPI',upm:'24º BPM',tot:11,pron:4,bai:2,ins:4,
+   loc:'CHEVROLET S10 - 2022/2023 - BAIXADA\nCHEVROLET S10 - 2022 - OPERANDO\nFORD RANGER - 2025 - BAIXADA',
+   prop:'CHEVROLET TRAIL BLAZER - 2026 - OPERANDO\nCHEVROLET S10 - 2020 - OPERANDO\nFORD RANGER - 2021 - OPERANDO\nCHEVROLET S10 - 2019/2020 - INSERVÍVEL\nFIAT PÁLIO WEEKEND - 2014 - INSERVÍVEL\nFIAT PÁLIO WEEKEND - 2014 - INSERVÍVEL\nMITSUBISHI TRITON - 2012/2013 - INSERVÍVEL'},
+];
+
+/* ── UTILS ── */
+let dChart=null,bChart=null;
+function sum(a,k){return a.reduce((s,r)=>s+r[k],0);}
+function pctCol(p){return p>=70?'#388bfd':p>=40?'#d29922':'#f85149';}
+function filtered(){
+  const g=document.getElementById('selGC').value;
+  const u=document.getElementById('selUPM').value;
+  return RAW.filter(r=>(g?r.gc===g:true)&&(u?r.upm===u:true));
+}
+function updateUPMs(){
+  const g=document.getElementById('selGC').value;
+  const upms=g?(GC_MAP[g]||[]).filter(u=>RAW.some(r=>r.upm===u)):[...new Set(RAW.map(r=>r.upm))].sort();
+  const sel=document.getElementById('selUPM');
+  sel.innerHTML='<option value="">Todas as unidades</option>'+upms.map(u=>`<option>${u}</option>`).join('');
+}
+function reset(){document.getElementById('selGC').value='';updateUPMs();render();}
+
+/* ── TOGGLE ── */
+function toggle(id){
+  const det=document.getElementById('det-'+id);
+  const tr=document.getElementById('tr-'+id);
+  if(!det||!tr)return;
+  const open=det.classList.contains('visible');
+  det.classList.toggle('visible',!open);
+  tr.classList.toggle('open',!open);
+}
+
+/* ── RENDER ── */
+function render(){
+  const data=filtered();
+  const tot=sum(data,'tot'),pron=sum(data,'pron'),bai=sum(data,'bai'),ins=sum(data,'ins');
+  const pct=tot>0?Math.round(pron/tot*100):0;
+
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi kpi-blue">
+      <div class="kpi-hd"><span class="kpi-lbl">Total de viaturas</span><span class="kpi-ico">&#9632;</span></div>
+      <div class="kpi-val">${tot}</div>
+      <div class="kpi-sub">${data.length} UPMs informantes</div>
+    </div>
+    <div class="kpi kpi-green">
+      <div class="kpi-hd"><span class="kpi-lbl">Prontas para operação</span><span class="kpi-ico">&#10003;</span></div>
+      <div class="kpi-val">${pron}</div>
+      <div class="kpi-sub">${pct}% de disponibilidade</div>
+    </div>
+    <div class="kpi kpi-amber">
+      <div class="kpi-hd"><span class="kpi-lbl">Baixadas p/ manutenção</span><span class="kpi-ico">&#9881;</span></div>
+      <div class="kpi-val">${bai}</div>
+      <div class="kpi-sub">${tot>0?Math.round(bai/tot*100):0}% da frota</div>
+    </div>
+    <div class="kpi kpi-red">
+      <div class="kpi-hd"><span class="kpi-lbl">Inservíveis</span><span class="kpi-ico">&#9888;</span></div>
+      <div class="kpi-val">${ins}</div>
+      <div class="kpi-sub">${tot>0?Math.round(ins/tot*100):0}% da frota</div>
+    </div>`;
+
+  /* Gráfico rosca */
+  if(dChart)dChart.destroy();
+  dChart=new Chart(document.getElementById('cDonut'),{
+    type:'doughnut',
+    data:{labels:['Prontas','Baixadas','Inservíveis'],datasets:[{data:[pron,bai,ins],backgroundColor:['#388bfd','#d29922','#f85149'],borderColor:'#161b22',borderWidth:3,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed} (${tot>0?Math.round(c.parsed/tot*100):0}%)`}}}}
+  });
+
+  /* Gráfico barras */
+  const gcKeys=Object.keys(GC_MAP);
+  const gcD=gcKeys.map(g=>{const r=RAW.filter(x=>x.gc===g);return{g,pron:sum(r,'pron'),bai:sum(r,'bai'),ins:sum(r,'ins')};});
+  if(bChart)bChart.destroy();
+  bChart=new Chart(document.getElementById('cBar'),{
+    type:'bar',
+    data:{labels:gcKeys,datasets:[
+      {label:'Prontas',data:gcD.map(d=>d.pron),backgroundColor:'#388bfd',borderRadius:3,borderSkipped:false},
+      {label:'Baixadas',data:gcD.map(d=>d.bai),backgroundColor:'#d29922',borderRadius:3,borderSkipped:false},
+      {label:'Inservíveis',data:gcD.map(d=>d.ins),backgroundColor:'#f85149',borderRadius:3,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},
+      scales:{x:{stacked:true,ticks:{color:'#8b949e',font:{size:11,family:'IBM Plex Mono'}}},
+              y:{stacked:true,ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+
+  /* Cards GC */
+  document.getElementById('gcGrid').innerHTML=gcKeys.map(g=>{
+    const rows=RAW.filter(r=>r.gc===g);
+    const t=sum(rows,'tot'),p=sum(rows,'pron'),b=sum(rows,'bai'),i=sum(rows,'ins');
+    const pct=t>0?Math.round(p/t*100):0;
+    const col=pctCol(pct);
+    const c=GCC[g]||{bg:'rgba(56,139,253,0.13)',fg:'#79b8ff'};
+    return`<div class="gc-card">
+      <span class="gc-bdg" style="background:${c.bg};color:${c.fg}">${g}</span>
+      <div class="gc-row"><span>Total</span><span style="color:var(--text)">${t}</span></div>
+      <div class="gc-row"><span>Prontas</span><span style="color:#388bfd">${p}</span></div>
+      <div class="gc-row"><span>Baixadas</span><span style="color:#d29922">${b}</span></div>
+      <div class="gc-row"><span>Inservíveis</span><span style="color:#f85149">${i}</span></div>
+      <div class="prog-bg"><div class="prog-fg" style="width:${pct}%;background:${col}"></div></div>
+      <div class="gc-pct" style="color:${col}">${pct}% operacional</div>
+    </div>`;
+  }).join('');
+
+  /* Tabela */
+  const sorted=[...data].sort((a,b)=>b.tot-a.tot);
+  document.getElementById('tbl-count').textContent=`${sorted.length} unidades`;
+  let html='';
+  sorted.forEach(r=>{
+    const p=r.tot>0?Math.round(r.pron/r.tot*100):0;
+    const col=pctCol(p);
+    const c=GCC[r.gc]||{bg:'rgba(56,139,253,0.13)',fg:'#79b8ff'};
+    const id=encodeURIComponent(r.gc+'__'+r.upm);
+    html+=`
+    <tr class="row-main" id="tr-${id}" onclick="toggle('${id}')">
+      <td style="text-align:center"><span class="expand-ico">&#9654;</span></td>
+      <td><span class="badge" style="background:${c.bg};color:${c.fg}">${r.gc}</span></td>
+      <td style="font-weight:500">${r.upm}</td>
+      <td class="mono" style="text-align:center">${r.tot}</td>
+      <td class="mono" style="text-align:center;color:#388bfd">${r.pron}</td>
+      <td class="mono" style="text-align:center;color:#d29922">${r.bai}</td>
+      <td class="mono" style="text-align:center;color:#f85149">${r.ins}</td>
+      <td>
+        <div class="mini-bar">
+          <div class="mini-bg"><div class="mini-fg" style="width:${p}%;background:${col}"></div></div>
+          <span class="mono" style="font-size:11px;font-weight:500;color:${col};min-width:32px">${p}%</span>
+        </div>
+      </td>
+    </tr>
+    <tr class="detail-row">
+      <td colspan="8">
+        <div class="detail-inner" id="det-${id}">
+          <div class="det-section">
+            <div class="det-label">🔑 Viaturas Locadas</div>
+            <div class="det-box">${r.loc||'Não informado'}</div>
+          </div>
+          <div class="det-section">
+            <div class="det-label">🚔 Viaturas Próprias (Carga PM)</div>
+            <div class="det-box">${r.prop||'Não informado'}</div>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  });
+  document.getElementById('tbody').innerHTML=html||
+    '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:2rem">Nenhum dado encontrado.</td></tr>';
+}
+
+function gerarPDF(){
+  /* Expande todas as linhas para o PDF */
+  document.querySelectorAll('.detail-inner').forEach(el=>el.classList.add('visible'));
+  document.querySelectorAll('.row-main').forEach(el=>el.classList.add('open'));
+  const orig=document.title;
+  const gc=document.getElementById('selGC').value||'Todos';
+  const upm=document.getElementById('selUPM').value||'Todas';
+  document.title=`PMMA_Viaturas_${gc}_${upm}_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}`;
+  setTimeout(()=>{
+    window.print();
+    document.title=orig;
+    /* Recolhe após impressão */
+    document.querySelectorAll('.detail-inner').forEach(el=>el.classList.remove('visible'));
+    document.querySelectorAll('.row-main').forEach(el=>el.classList.remove('open'));
+  },300);
+}
+
+document.getElementById('selGC').addEventListener('change',()=>{updateUPMs();render();});
+document.getElementById('selUPM').addEventListener('change',render);
+updateUPMs();
+render();
+</script>
+</body>
+</html>
